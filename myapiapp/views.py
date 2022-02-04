@@ -1,5 +1,7 @@
 from django.contrib.auth.models import User, Group
 from rest_framework import permissions, viewsets
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
 from affairs.models import Student
 from myapiapp.serializers import UserSerializer, GroupSerializer, StudentSerializer
@@ -23,10 +25,29 @@ class GroupViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
 
-# ti handle the student viewset
+# to handle the student viewset => view the
 class StudentViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows students to be viewed or edited.
     """
     queryset = Student.objects.all().order_by('student_id')
     serializer_class = StudentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+@api_view(['POST'])
+def update_student(request, pk):
+    student = Student.objects.get(student_id=pk)
+    serializer = StudentSerializer(instance=student, data=request.data)
+
+    if serializer.is_valid():
+        serializer.save()
+
+    return Response(serializer.data)
+
+
+@api_view(['DELETE'])
+def delete_student(request, pk):
+    student = Student.objects.get(student_id=pk)
+    student.delete()
+    return Response("Deleted Successfully")
